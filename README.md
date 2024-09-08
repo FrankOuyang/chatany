@@ -88,6 +88,10 @@ npm install @clerk/nextjs
     ```bash
     npm install lucide-react
     ```
+- typewriter effect
+    ```bash
+    npx shadcn@latest add "https://v0.dev/chat/b/PnODrXv?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0.._IonpIws2Tpirwm_.caXzL_Pum53qOoWWfFMfskOzDeftYAkz4EC4B7xIjGFK6LEJCPs.FUCbvRh5xi0Jdp7QoJGW1g"
+    ```
 
 ## database
 
@@ -106,4 +110,55 @@ npm install @clerk/nextjs
     npm run generate
     npm run migrate
     ```
+## File upload
 
+- install vscode extension `ES7 React/Redux/GraphQL/React-Native snippets`
+- `npm install react-dropzone`
+- `npx shadcn@latest add progress`
+- `npx shadcn@latest add alert`
+
+## AWS S3
+
+- AWS console
+- create a s3 bucket: bucket policy and CORS
+- `npm install aws-sdk`
+
+## RAG(Reformulated Augmented Generation) 检索增强生成
+
+Vector & Embedding
+
+### Vector
+
+A list of numbers that represent a word or a sentence, [1, 2], 1 represents the x-coordinate, 2 represents the y-coordinate.
+
+3D vectors: x, y, z
+
+cosine similarity: the angle between two vectors
+
+cosine distance: 1 - cosine similarity
+
+```
+{
+    embedding: [1, 2],
+    metadata: { textContent: "hello world" }
+}
+```
+
+Vector vs. embedding: vector is a list of numbers, embedding is a vector with metadata.
+
+Steps for coding:
+1. obtain the file
+2. split and segment the file - Langchain
+3. convert the file into vectors, vectorize and embed the individual documents
+4. store the vectors into vector database(pineconeDB)
+--chat with AI---
+5. embed the query into a vector
+6. query the pineconeDB for similar vectors
+7. extract out the metadata of the similar vectors
+8. feed metadata into the AI(LLM) prompt to generate the output with the context of the file
+
+
+## React query setup
+```bash
+npm install @tanstack/react-query
+```

@@ -31,7 +31,7 @@ export async function saveFile(formData: FormData) {
     return {
       success: true,
       filepath,
-      file_name: filename,
+      filename,
     };
   } catch (error) {
     console.error("Error saving file:", error);
