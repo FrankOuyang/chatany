@@ -8,10 +8,12 @@ import { saveFile } from "@/lib/localStorage"
 import { useMutation } from "@tanstack/react-query"
 import axios from "axios"
 import toast from "react-hot-toast"
+import { useRouter } from "next/navigation"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
 
 const FileUpload: React.FC = () => {
+  const router = useRouter()
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [fileName, setFileName] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -59,8 +61,9 @@ const FileUpload: React.FC = () => {
           filepath: result.filepath!,
           filename: result.filename!,
         }, {
-          onSuccess: (data) => {
-            toast.success(data.success ? 'Chat created successfully.' : 'Failed to create chat. Unexpected response from server.', { duration: 5000 })
+          onSuccess: (chat_id) => {
+            toast.success('Chat created successfully.', { duration: 5000 });
+            router.push(`/chat/${chat_id}`)
             setUploadStatus('success')
           },
           onError: (error) => {
@@ -75,7 +78,7 @@ const FileUpload: React.FC = () => {
         setErrorMessage('Failed to upload file to the server. Please try again.')
       }
     }
-  }, [mutate])
+  }, [mutate, router])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "application/pdf": [".pdf"] },
@@ -99,7 +102,7 @@ const FileUpload: React.FC = () => {
               Uploading...
             </p>
             <p className="mt-2 text-xs text-center text-gray-400">
-              (Take a break while we process your file 😊)
+              (Take a break while we process your file :))
             </p>
           </>
         ) : (
@@ -122,7 +125,7 @@ const FileUpload: React.FC = () => {
           <CheckCircle className="h-4 w-4" />
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>
-            File &quot;{fileName}&quot; has been successfully uploaded to the server.
+            File uploaded successfully.
           </AlertDescription>
         </Alert>
       )}

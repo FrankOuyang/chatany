@@ -1,50 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
+import Typed from 'typed.js'
 
-export default function Typewriter({ 
-  text = "Welcome to the looping typewriter effect!", 
-  speed = 100,
-  pauseDuration = 2000 
-}) {
-  const [displayText, setDisplayText] = useState('')
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
+export default function TypewriterEffect() {
+  const el = useRef(null)
 
   useEffect(() => {
-    let timer: NodeJS.Timeout
+    const typed = new Typed(el.current, {
+      strings: [
+        'Chat with any doc',
+        'in real-time',
+      ],
+      typeSpeed: 50,
+      backSpeed: 50,
+      backDelay: 2000,
+      startDelay: 500,
+      showCursor: true,
+      loop: true
+    })
 
-    if (isPaused) {
-      timer = setTimeout(() => {
-        setIsPaused(false)
-        setIsDeleting(true)
-      }, pauseDuration)
-    } else if (isDeleting) {
-      if (displayText) {
-        timer = setTimeout(() => {
-          setDisplayText(prev => prev.slice(0, -1))
-        }, speed / 2)
-      } else {
-        setIsDeleting(false)
-        setCurrentIndex(0)
-      }
-    } else if (currentIndex < text.length) {
-      timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex])
-        setCurrentIndex(prev => prev + 1)
-      }, speed)
-    } else {
-      setIsPaused(true)
+    return () => {
+      // Destroy Typed instance during cleanup to stop animation
+      typed.destroy()
     }
-
-    return () => clearTimeout(timer)
-  }, [currentIndex, displayText, isDeleting, isPaused, text, speed, pauseDuration])
+  }, [])
 
   return (
     <p aria-live="polite">
-      <span className='text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-purple-500'>{displayText}</span>
-      <span>|</span>
+      <span ref={el} className='text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-purple-500' />
     </p>
   )
 }

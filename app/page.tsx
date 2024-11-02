@@ -3,7 +3,8 @@ import { UserButton } from "@clerk/nextjs"
 import { auth } from "@clerk/nextjs/server"
 import Link from "next/link"
 import { LogIn } from 'lucide-react'
-import Typewriter from "@/components/Typerwriter"
+import TypewriterEffect from "@/components/Typerwriter"
+// import Typewriter from "@/components/Typerwriter-demo"
 import FileUpload from "@/components/FileUpload"
 
 export default async function Home() {
@@ -20,7 +21,8 @@ export default async function Home() {
           </div>
           <div className="flex items-center whitespace-nowrap">
             <h1 className="mr-3 text-5xl font-extrabold">
-              <Typewriter text="Chat with any doc" speed={150} pauseDuration={5000} />
+              {/* <Typewriter text="Chat with any doc" speed={150} pauseDuration={5000} /> */}
+              < TypewriterEffect />
               {/* <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-purple-500">Spreadsheet Formulas</span> */}
             </h1>
           </div>

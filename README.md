@@ -161,4 +161,40 @@ Steps for coding:
 ## React query setup
 ```bash
 npm install @tanstack/react-query
+npm install axios
+npm install react-hot-toast
+```
+
+## PineconeDB
+
+Each file has own namespace, each namespace has its own vector space.
+
+We can pass in a namespace parameter to the pineconeDB to query the vectors in the specific namespace.
+
+
+Terms:
+- index -> database: store vectors
+- namespace -> table: segment file vector spaces
+
+```bash
+npm install @pinecone-database/pinecone
+npm install @pinecone-database/doc-splitter
+# npm install @aws-sdk/client-s3
+
+# https://js.langchain.com/v0.2/docs/integrations/document_loaders/file_loaders/pdf/
+npm install @langchain/community pdf-parse
+
+# update `package.json`
+# "dev": "export NODE_OPTIONS='--max_old_space_size=8192' && next dev",
+
+npm install openai openai-edge
+
+npm install md5 # hash
+```
+
+## Chat page
+
+```bash
+npm install react-pdf@7.7.1 pdfjs-dist@4.0.379
+npx shadcn@latest add card skeleton
 ```
