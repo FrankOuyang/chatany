@@ -4,12 +4,13 @@ import "./globals.css";
 import { ClerkProvider } from '@clerk/nextjs'
 import Providers from "@/components/Providers";
 import { Toaster } from "react-hot-toast";
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ChatPDF",
-  description: "ChatPDF is powered by AI",
+  title: "ChatAny",
+  description: "ChatAny is powered by AI",
 };
 
 export default function RootLayout({
@@ -18,16 +19,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider afterSignOutUrl="/">
-      {/* Every component within this Provier has access to the data cache */}
-      <Providers>
-        <html lang="en">
-          <body className={inter.className}>
-            {children}
-            <Toaster />
-          </body>
-        </html>
-      </Providers>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClerkProvider afterSignOutUrl="/">
+            <Providers>
+              {children}
+              <Toaster />
+            </Providers>
+          </ClerkProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   )
 }

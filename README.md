@@ -192,9 +192,127 @@ npm install openai openai-edge
 npm install md5 # hash
 ```
 
+## Pgvector
+
+https://github.com/pgvector/pgvector?tab=readme-ov-file#homebrew
+
+https://github.com/pgvector/pgvector-node
+
+```bash
+brew install postgresql # postgresql@14
+
+brew install pgvector
+
+brew services start postgresql
+
+psql postgres
+
+postgres=# CREATE DATABASE chatany;
+postgres=# CREATE USER chatany WITH PASSWORD 'zaq12wsx';
+postgres=# GRANT ALL PRIVILEGES ON DATABASE chatany TO chatany;
+postgres=# \c chatany
+postgres=# CREATE EXTENSION IF NOT EXISTS vector;
+postgres=# CREATE TABLE IF NOT EXISTS documents (id bigserial PRIMARY KEY, fileName text, hash text, content text, pageNumber int, embedding vector(1024));
+postgres=# GRANT ALL PRIVILEGES ON TABLE documents TO chatany;
+postgres=# GRANT USAGE, SELECT ON SEQUENCE documents_id_seq TO chatany;
+```
+
+```bash
+npm install pgvector
+```
+
 ## Chat page
 
 ```bash
 npm install react-pdf@7.7.1 pdfjs-dist@4.0.379
 npx shadcn@latest add card skeleton
+```
+
+# Dark theme
+
+```bash
+npm install next-themes
+npx shadcn@latest add dropdown-menu
+```
+
+# Chat Component
+
+vercel ai sdk
+
+```bash
+npm install ai
+npm install @ai-sdk/openai
+
+npx shadcn@latest add input
+```
+
+
+
+1. i18n
+2. input & output tokens
+3. embeddings & context (pgvector) 3->4(overlap)
+4. match score
+5. only support pdf with text content
+6. voice chat
+
+
+```
+You are an intelligent AI assistant with the following traits:
+- Expert knowledge and helpfulness
+- Professional and articulate communication
+- Friendly and inspiring personality
+
+Context for this conversation:
+    ${context}
+
+Guidelines:
+1. Base all responses on the provided context
+2. If the context doesn't contain the answer, respond with "I'm sorry, but I don't know the answer to that question"
+3. Do not invent or assume information outside the given context
+4. If new information contradicts previous responses, acknowledge the update without apologizing
+5. Maintain a helpful and professional tone throughout the conversation
+```
+
+```
+export function buildRAGPrompt(query: string, context: string) {
+  return `You are a helpful AI assistant. Answer the question based on the provided context.
+If you cannot find the answer in the context, say "I cannot find information about this in the provided context."
+Do not make up or infer information that is not directly supported by the context.
+
+Context:
+${context}
+
+Question: ${query}
+
+Instructions:
+1. Only use information from the provided context
+2. If citing specific parts, mention the document/page number
+3. If the context contains conflicting information, point this out
+4. Keep the answer concise but complete
+5. Use bullet points for multiple points
+
+Answer:`;
+}
+```
+
+# Node.js Crash Course
+
+`global` and `process`
+npm init
+`node index` or `node index.js`
+commonjs vs. es module (import/export) => package.json(type)
+export default xxx => import xxx from 'yyy'
+export xxx => import { xxx } from 'yyy'
+
+```js
+const post = [
+    {
+        id: 1,
+        name: "John"
+    }
+]
+const getPost = () => post
+export const getPostLength = () => post.length
+// export { getPost }
+export default getPost
 ```

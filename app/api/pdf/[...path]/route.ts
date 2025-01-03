@@ -5,10 +5,11 @@ import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: NextRequest, { params }: { params: { path: string[] } }) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // const { userId } = await auth();
+    // if (!userId) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
+    auth().protect(); // protect the route with clerk auth
     const relativePath = params.path.join('/');
     const filePath = path.join(process.cwd(), 'uploads', relativePath);
 

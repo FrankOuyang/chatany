@@ -27,8 +27,16 @@ export default function TypewriterEffect() {
   }, [])
 
   return (
-    <p aria-live="polite">
-      <span ref={el} className='text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-purple-500' />
-    </p>
+    <div className="relative">
+      {/* Hidden text to set the height */}
+      <p className="invisible" aria-hidden="true">
+        Chat with any doc
+      </p>
+      
+      {/* Typed.js element positioned absolutely */}
+      <p aria-live="polite" className="absolute inset-0">
+        <span ref={el} className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-purple-500" />
+      </p>
+    </div>
   )
 }

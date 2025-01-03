@@ -24,40 +24,50 @@ const ChatSideBar = ({ chats, chatId, isPro }: Props) => {
   };
 
   return (
-    <div className="w-full h-screen p-4 text-gray-200 bg-gray-900">
+    <div className="flex flex-col h-full p-4">
       <Link href="/">
-        <Button className="w-full border-dashed border-white border">
-          <PlusCircle className="mr-2 w-4 h-4" />
-          New Chat
+        <Button 
+          variant="default" 
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          <PlusCircle className="h-5 w-5 animate-pulse" />
+          New Conversation
         </Button>
       </Link>
 
-      <div className="flex flex-col gap-2 mt-4">
+      <div className="flex-1 flex flex-col gap-3 mt-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 px-1">
         {chats.map((chat) => (
           <Link key={chat.id} href={`/chat/${chat.id}`}>
             <div
-              className={cn("rounded-lg p-3 text-slate-300 flex items-center", {
-                "bg-blue-600 text-white": chat.id === chatId,
-                "hover:text-white": chat.id !== chatId,
-              })}
+              className={cn(
+                "rounded-lg p-3.5 text-sm flex items-center transition-all duration-300 hover:scale-[1.02] border",
+                {
+                  "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg border-transparent": chat.id === chatId,
+                  "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md border-gray-200 dark:border-gray-700": chat.id !== chatId,
+                }
+              )}
             >
-              <MessageCircle className="mr-2" />
-              <p className="w-full overflow-hidden text-sm truncate whitespace-nowrap text-ellipsis">
-                {formatPdfName(chat.pdfName)}
-              </p>
+              <MessageCircle className={cn(
+                "mr-3 w-5 h-5 transition-colors",
+                chat.id === chatId ? "text-white" : "text-blue-500"
+              )} />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">
+                  {formatPdfName(chat.pdfName)}
+                </p>
+                <p className="text-xs opacity-70 truncate">
+                  {new Date(chat.createdAt).toLocaleDateString()}
+                </p>
+              </div>
             </div>
           </Link>
         ))}
       </div>
-    
-      <div className="absolute bottom-4 left-4">
-        <div className="flex items-center gap-2 text-sm text-slate-500 flex-wrap">
-            <Link href="/">Home</Link>
-            <Link href="/">Source</Link>
-            {/* Stripe Button */}
-        </div>
+
+      <div className="mt-4 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 hidden">
+        <Link href="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">Home</Link>
+        <Link href="/" className="hover:text-gray-900 dark:hover:text-white transition-colors">Source</Link>
       </div>
-   
     </div>
   );
 };

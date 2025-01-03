@@ -21,17 +21,6 @@ type PDFPage = {
   };
 };
 
-// A helper function that breaks an array into chunks of size batchSize
-// const chunks = (array: any[], batchSize = 200) => {
-//   const chunks = [];
-
-//   for (let i = 0; i < array.length; i += batchSize) {
-//     chunks.push(array.slice(i, i + batchSize));
-//   }
-
-//   return chunks;
-// };
-
 export async function loadFileIntoPinecone(filePath: string, filename: string) {
   if (!filePath) {
     throw new Error("No file path provided");
@@ -41,9 +30,10 @@ export async function loadFileIntoPinecone(filePath: string, filename: string) {
   const pages = (await loader.load()) as PDFPage[]; // array of documents
 
   // split and segment the file into smaller documents
+  // list of pages, each page is a list of documents
   const documents = await Promise.all(pages.map(prepareDocument));
 
-  // vectorize and embed individual documents
+  // vectorize and embed individual documents(1000 bytes)
   const vectors = await Promise.all(documents.flat().map(embedDocuments));
 
   // upsert vectors to Pinecone
@@ -54,8 +44,6 @@ export async function loadFileIntoPinecone(filePath: string, filename: string) {
   // console.log(vectors);
   // console.log(recordChunks);
   await PineconeIndex.namespace(namespace).upsert(vectors);
-  // Upsert data with 200 records per request asynchronously using Promise.all()
-  // await Promise.all(recordChunks.map((chunk) => PineconeIndex.namespace(namespace).upsert(chunk)));
 
   return documents[0];
 }
@@ -69,7 +57,7 @@ async function embedDocuments(doc: Document) {
       id: hash,
       values: embeddings,
       metadata: {
-        text: doc.metadata.text,
+        text: doc.pageContent,
         pageNumber: doc?.metadata?.pageNumber,
       },
     } as PineconeRecord;
@@ -79,26 +67,30 @@ async function embedDocuments(doc: Document) {
   }
 }
 
-// truncate a string to a certain number of bytes
-export const truncateStringByBytes = (str: string, bytes: number) => {
-  const enc = new TextEncoder();
-  return new TextDecoder("utf-8").decode(enc.encode(str).slice(0, bytes));
-};
-
 // split a single page into multiple documents
 async function prepareDocument(page: PDFPage) {
   let { pageContent, metadata } = page;
-  pageContent = pageContent.replace(/\n/g, "");
-  // split the docs
-  const splitter = new RecursiveCharacterTextSplitter();
+  
+  // Clean and normalize the text content
+  pageContent = pageContent.replace(/\n/g, " ").trim(); // Replace newlines with spaces and trim
+  pageContent = pageContent.replace(/\s+/g, " "); // Normalize multiple spaces
+  
+  // Configure the text splitter with optimal chunk settings
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+  });
+
   const docs = await splitter.splitDocuments([
     new Document({
       pageContent,
       metadata: {
         pageNumber: metadata?.loc?.pageNumber,
-        text: truncateStringByBytes(pageContent, 36000),
+        totalLength: pageContent.length,
+        createdAt: new Date().toISOString(),
       },
     }),
   ]);
+
   return docs;
 }

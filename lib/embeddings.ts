@@ -1,24 +1,41 @@
 import OpenAI from "openai";
 
+// Initialize OpenAI client with environment variables
 const openai = new OpenAI({
   apiKey: process.env.DASHSCOPE_API_KEY,
-  baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  baseURL: process.env.DASHSCOPE_BASE_URL,
 });
 
-// convert a string into a vector
-// Pinecone indexes must be created with a dimension that matches the model’s embedding dimension.
-// The dimension of an index cannot be changed after creation.
-export async function getEmbeddings(text: string, dimensions: number = 1024) {
+/**
+ * Converts text into vector embeddings using OpenAI's embedding model
+ * @param text - The input text to convert to embeddings
+ * @param dimensions - The dimension size for the embeddings (default: 1024)
+ * @returns Promise<number[]> - Array of embedding values
+ * @throws Error if the OpenAI API call fails
+ */
+export async function getEmbeddings(text: string, dimensions: number = 1024): Promise<number[]> {
+  if (!text) {
+    throw new Error("Input text cannot be empty");
+  }
+
   try {
+    // Normalize text by replacing newlines with spaces and trimming
+    const normalizedText = text.replace(/\n/g, " ").trim();
+
     const response = await openai.embeddings.create({
       model: "text-embedding-v3",
-      input: text.replace(/\n/g, " "),
+      input: normalizedText,
       dimensions: dimensions,
     });
-    const result = await response.data[0];
-    return result.embedding as number[];
+
+    if (!response.data?.[0]?.embedding) {
+      throw new Error("Invalid response from OpenAI API");
+    }
+
+    return response.data[0].embedding;
+
   } catch (error) {
-    console.error("Error calling openai embedding API:", error);
-    throw error;
+    console.error("Error generating embeddings:", error);
+    throw new Error(`Failed to generate embeddings: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

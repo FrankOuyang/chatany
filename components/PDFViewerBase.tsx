@@ -11,12 +11,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 type Props = { pdf_path: string };
 
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center gap-2 text-gray-500 px-4 py-2 rounded-lg shadow-sm">
-    <Loader2 className="w-5 h-5 animate-spin" />
-    <span className="font-medium">Loading PDF...</span>
-  </div>
-);
+// const LoadingSpinner = () => (
+//   <div className="flex items-center justify-center gap-2 text-gray-500 px-4 py-2 rounded-lg shadow-sm">
+//     <Loader2 className="w-5 h-5 animate-spin" />
+//     <span className="font-medium">Loading PDF...</span>
+//   </div>
+// );
 
 const PDFViewerBase = ({ pdf_path }: Props) => {
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -68,11 +68,9 @@ const PDFViewerBase = ({ pdf_path }: Props) => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 p-4">
-      {/* {loading && <LoadingSpinner />} */}
-      
+    <div className="h-full flex flex-col items-center">
       {error && (
-        <div className="text-red-500 p-4 border border-red-300 rounded-lg bg-white shadow-sm">
+        <div className="text-red-500 p-4 rounded-lg bg-white shadow-sm mb-4">
           <p className="font-medium">Error: {error}</p>
           <p className="text-sm mt-2 text-gray-600">URL: {apiUrl}</p>
           <button 
@@ -84,57 +82,72 @@ const PDFViewerBase = ({ pdf_path }: Props) => {
         </div>
       )}
 
-      <div className="max-w-4xl w-full bg-white rounded-lg shadow-lg p-4 flex flex-col items-center">
-        <Document
-          file={apiUrl}
-          onLoadSuccess={onDocumentLoadSuccess}
-          onLoadError={onDocumentLoadError}
-          loading={<LoadingSpinner />}
-          className="flex justify-center"
-        >
-          {numPages && (
-            <Page 
-              pageNumber={pageNumber}
-              loading={<LoadingSpinner />}
-              className="max-w-full mx-auto"
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
-          )}
-        </Document>
+      <div className="flex-1 w-full max-w-3xl bg-white rounded-lg shadow-lg flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-4">
+          <Document
+            file={apiUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            // loading={<LoadingSpinner />}
+            loading={<div></div>}
+            className="flex justify-center"
+          >
+            {numPages && (
+              <Page 
+                pageNumber={pageNumber}
+                // loading={<LoadingSpinner />}
+                loading={<div></div>}
+                className="max-w-full mx-auto"
+                width={500}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+            )}
+          </Document>
+        </div>
 
         {numPages && (
-          <div className="mt-4 flex items-center justify-center gap-4">
-            <button
-              onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
-              disabled={pageNumber <= 1}
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            
-            <form onSubmit={handlePageSubmit} className="flex items-center gap-2">
-              <input
-                type="number"
-                min={1}
-                max={numPages}
-                value={inputPage}
-                onChange={handlePageInput}
-                onBlur={handlePageSubmit}
-                className="w-16 px-2 py-1 text-sm border rounded-md text-center"
-              />
-              <span className="text-sm font-medium">
-                of {numPages}
-              </span>
-            </form>
-            
-            <button
-              onClick={() => setPageNumber((prev) => Math.min(prev + 1, numPages || prev))}
-              disabled={pageNumber >= (numPages || 0)}
-              className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-center gap-4">
+              <button
+                onClick={() => {
+                  const newPage = Math.max(pageNumber - 1, 1);
+                  setPageNumber(newPage);
+                  setInputPage(newPage.toString());
+                }}
+                disabled={pageNumber <= 1}
+                className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors text-black dark:text-black"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              
+              <form onSubmit={handlePageSubmit} className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={numPages}
+                  value={inputPage}
+                  onChange={handlePageInput}
+                  onBlur={handlePageSubmit}
+                  className="w-16 px-2 py-1 text-sm border rounded-md text-center bg-white dark:bg-white text-black dark:text-black"
+                />
+                <span className="text-sm font-medium text-black dark:text-black">
+                  of {numPages}
+                </span>
+              </form>
+              
+              <button
+                onClick={() => {
+                  const newPage = Math.min(pageNumber + 1, numPages);
+                  setPageNumber(newPage);
+                  setInputPage(newPage.toString());
+                }}
+                disabled={pageNumber >= numPages}
+                className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors text-black dark:text-black"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         )}
       </div>
