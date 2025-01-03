@@ -1,4 +1,8 @@
 import OpenAI from "openai";
+import { PDFPage } from "./constants";
+import { Document } from "langchain/document";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+
 
 // Initialize OpenAI client with environment variables
 const openai = new OpenAI({
@@ -38,4 +42,32 @@ export async function getEmbeddings(text: string, dimensions: number = 1024): Pr
     console.error("Error generating embeddings:", error);
     throw new Error(`Failed to generate embeddings: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+// split a single page into multiple documents
+export async function prepareDocument(page: PDFPage) {
+  let { pageContent, metadata } = page;
+  
+  // Clean and normalize the text content
+  pageContent = pageContent.replace(/\n/g, " ").trim(); // Replace newlines with spaces and trim
+  pageContent = pageContent.replace(/\s+/g, " "); // Normalize multiple spaces
+  
+  // Configure the text splitter with optimal chunk settings
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+  });
+
+  const docs = await splitter.splitDocuments([
+    new Document({
+      pageContent,
+      metadata: {
+        pageNumber: metadata?.loc?.pageNumber,
+        totalLength: pageContent.length,
+        createdAt: new Date().toISOString(),
+      },
+    }),
+  ]);
+
+  return docs;
 }

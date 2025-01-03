@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { chats } from "@/lib/db/schema";
+import { loadFileIntoPgVector } from "@/lib/pgvector";
 import { loadFileIntoPinecone } from "@/lib/pinecone";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -17,7 +18,15 @@ export async function POST(req: Request, res: Response) {
     // sleep for 2 seconds to simulate processing
     // await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    await loadFileIntoPinecone(filepath, filename); // each item in the array has pageContent and metadata
+    interface VectorStore {
+      loadFile: (filepath: string, filename: string) => Promise<any>;
+    }
+
+    const vectorStore: VectorStore = process.env.USE_PGVECTOR === "true" 
+      ? { loadFile: loadFileIntoPgVector }
+      : { loadFile: loadFileIntoPinecone };
+    console.log(vectorStore);
+    await vectorStore.loadFile(filepath, filename);
     // console.log("Loaded", pages.length, "pages from", filepath);
     // console.log("First page:", pages[0]);
 

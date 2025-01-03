@@ -1,25 +1,16 @@
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import {
-  Document,
-  RecursiveCharacterTextSplitter,
-} from "@pinecone-database/doc-splitter";
-import { getEmbeddings } from "./embeddings";
+import { Document } from "@pinecone-database/doc-splitter";
+import { getEmbeddings, prepareDocument } from "./embeddings";
 import md5 from "md5";
 import { convertToAscii } from "./utils";
+import { PDFPage } from "./constants";
 
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!,
 });
 
 export const PineconeIndex = pinecone.index(process.env.PINECONE_INDEX_NAME!);
-
-type PDFPage = {
-  pageContent: string;
-  metadata: {
-    loc: { pageNumber: number };
-  };
-};
 
 export async function loadFileIntoPinecone(filePath: string, filename: string) {
   if (!filePath) {
@@ -65,32 +56,4 @@ async function embedDocuments(doc: Document) {
     console.log("Error embedding document:", error);
     throw error;
   }
-}
-
-// split a single page into multiple documents
-async function prepareDocument(page: PDFPage) {
-  let { pageContent, metadata } = page;
-  
-  // Clean and normalize the text content
-  pageContent = pageContent.replace(/\n/g, " ").trim(); // Replace newlines with spaces and trim
-  pageContent = pageContent.replace(/\s+/g, " "); // Normalize multiple spaces
-  
-  // Configure the text splitter with optimal chunk settings
-  const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
-  });
-
-  const docs = await splitter.splitDocuments([
-    new Document({
-      pageContent,
-      metadata: {
-        pageNumber: metadata?.loc?.pageNumber,
-        totalLength: pageContent.length,
-        createdAt: new Date().toISOString(),
-      },
-    }),
-  ]);
-
-  return docs;
 }

@@ -1,10 +1,19 @@
 import { PineconeIndex } from "./pinecone";
 import { convertToAscii } from "./utils";
 import { getEmbeddings } from "./embeddings";
+import { Client } from 'pg';
+import { pgConfig } from './constants';
+import pgvector from 'pgvector/pg';
 
 type Metadata = {
   text: string;
   pageNumber: number;
+}
+
+type VectorMatch = {
+  id?: string;
+  score: number;
+  metadata: Metadata;
 }
 
 // Constants for score thresholds
@@ -29,13 +38,13 @@ function calculateAdaptiveThreshold(scores: number[]): number {
   );
 }
 
-export async function getMatchesFromEmbeddings(
+async function getMatchesFromPinecone(
   embeddings: number[],
   filename: string,
-) {
+): Promise<VectorMatch[]> {
   try {
     const namespace = convertToAscii(filename).split('/').pop() || filename;
-    console.log("[NAMESPACE]", namespace);
+    console.log("[PINECONE_NAMESPACE]", namespace);
 
     const queryResponse = await PineconeIndex.namespace(namespace).query({
       vector: embeddings,
@@ -43,11 +52,64 @@ export async function getMatchesFromEmbeddings(
       includeMetadata: true,
     });
 
-    return queryResponse.matches || [];
+    return (queryResponse.matches || []).map(match => ({
+      score: match.score || 0,
+      metadata: match.metadata as Metadata
+    }));
   } catch (error) {
     console.error("Error fetching from Pinecone:", error);
-    throw new Error(`Failed to fetch matches: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`Failed to fetch Pinecone matches: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+async function getMatchesFromPgVector(
+  embeddings: number[],
+  filename: string,
+): Promise<VectorMatch[]> {
+  const pgClient = new Client(pgConfig);
+  try {
+    await pgClient.connect();
+    await pgvector.registerType(pgClient);
+    
+    const fileName = convertToAscii(filename).split('/').pop() || filename;
+    console.log("[PGVECTOR_FILENAME]", fileName);
+
+    // Query similar vectors using cosine similarity
+    const { rows } = await pgClient.query(
+      `SELECT 
+        content as text,
+        pageNumber as "pageNumber",
+        1 - (embedding <=> $1) as score
+      FROM documents 
+      WHERE fileName = $2
+      ORDER BY embedding <=> $1
+      LIMIT 8`,
+      [pgvector.toSql(embeddings), fileName]
+    );
+
+    return rows.map(row => ({
+      score: row.score,
+      metadata: {
+        text: row.text,
+        pageNumber: row.pageNumber
+      }
+    }));
+  } catch (error) {
+    console.error("Error fetching from pgvector:", error);
+    throw new Error(`Failed to fetch pgvector matches: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    await pgClient.end();
+  }
+}
+
+export async function getMatchesFromEmbeddings(
+  embeddings: number[],
+  filename: string,
+): Promise<VectorMatch[]> {
+  const usesPgVector = process.env.USE_PGVECTOR === "true";
+  return usesPgVector 
+    ? getMatchesFromPgVector(embeddings, filename)
+    : getMatchesFromPinecone(embeddings, filename);
 }
 
 export async function getContext(query: string, filename: string) {
@@ -58,7 +120,7 @@ export async function getContext(query: string, filename: string) {
     // Normalize and validate scores
     const validMatches = matches.map(match => ({
       ...match,
-      score: match.score || 0, // Ensure score is never undefined
+      score: match.score || 0,
     }));
 
     // Calculate adaptive threshold based on actual scores
@@ -88,8 +150,8 @@ export async function getContext(query: string, filename: string) {
       matches: qualifyingMatches.map(m => ({
         score: m.score.toFixed(3),
         confidence: m.confidence,
-        pageNumber: (m.metadata as Metadata).pageNumber,
-        previewText: ((m.metadata as Metadata).text || '').substring(0, 100) + '...'
+        pageNumber: m.metadata.pageNumber,
+        previewText: (m.metadata.text || '').substring(0, 100) + '...'
       }))
     });
 
@@ -98,12 +160,11 @@ export async function getContext(query: string, filename: string) {
       .sort((a, b) => {
         const scoreDiff = b.score - a.score;
         if (Math.abs(scoreDiff) < 0.1) { // Consider scores within 0.1 as roughly equal
-          return ((a.metadata as Metadata).pageNumber || 0) - 
-                 ((b.metadata as Metadata).pageNumber || 0);
+          return (a.metadata.pageNumber || 0) - (b.metadata.pageNumber || 0);
         }
         return scoreDiff;
       })
-      .map(match => (match.metadata as Metadata).text);
+      .map(match => match.metadata.text);
 
     // Join with double newline and limit context length
     const context = sortedDocs.join("\n\n");

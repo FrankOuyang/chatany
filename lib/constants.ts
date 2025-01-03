@@ -1,3 +1,5 @@
+import type { ClientConfig } from 'pg';
+
 export type Model = {
   id: string;
   name: string;
@@ -32,3 +34,22 @@ export const AVAILABLE_MODELS: Model[] = [
     available: false,
   },
 ];
+
+export type PDFPage = {
+  pageContent: string;
+  metadata: {
+    loc: { pageNumber: number };
+  };
+};
+
+export const pgConfig: ClientConfig = {
+  host: process.env.PG_HOST,
+  port: process.env.PG_PORT ? parseInt(process.env.PG_PORT) : undefined,
+  user: process.env.PG_USER,
+  password: process.env.PG_PASSWORD,
+  database: process.env.PG_DATABASE,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  connectionTimeoutMillis: 5000, // 5 seconds
+  query_timeout: 10000, // 10 seconds
+  keepAlive: true
+};
